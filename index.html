@@ -13,7 +13,6 @@
             --bg-message-user: #282932;
             --text-main: #E3E3E3;
             --text-secondary: #9CA0A6;
-            --accent-gradient: linear-gradient(90deg, #4285f4, #d96570);
             --sidebar-width: 280px;
             --header-height: 60px;
         }
@@ -21,194 +20,624 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Google Sans', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg-body); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
 
-        /* --- SIDEBAR --- */
-        .sidebar { width: var(--sidebar-width); background-color: var(--bg-sidebar); display: flex; flex-direction: column; padding: 20px 10px; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 100; height: 100%; position: relative; }
-        @media (max-width: 768px) {
-            .sidebar { position: fixed; left: 0; top: 0; transform: translateX(-100%); box-shadow: 2px 0 10px rgba(0,0,0,0.5); }
-            .sidebar.active { transform: translateX(0); }
+        /* --- SIDEBAR & TOGGLE LOGIC --- */
+        .sidebar { 
+            width: var(--sidebar-width); 
+            background-color: var(--bg-sidebar); 
+            display: flex; 
+            flex-direction: column; 
+            padding: 20px 10px; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            z-index: 100; 
+            height: 100%; 
+            position: relative;
+            overflow-x: hidden;
+            white-space: nowrap;
         }
+        
+        .sidebar.collapsed {
+            width: 0;
+            padding: 20px 0;
+            opacity: 0;
+            border: none;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; left: 0; top: 0; transform: translateX(-100%); box-shadow: 2px 0 10px rgba(0,0,0,0.5); width: var(--sidebar-width); opacity: 1; padding: 20px 10px;}
+            .sidebar.active { transform: translateX(0); }
+            .sidebar.collapsed { width: var(--sidebar-width); padding: 20px 10px; opacity: 1; }
+        }
+        
         .overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 99; backdrop-filter: blur(2px); }
         .overlay.active { display: block; }
-        .menu-btn { background: none; border: none; cursor: pointer; padding: 10px; border-radius: 50%; color: var(--text-main); width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; }
-        .menu-btn:hover { background-color: var(--bg-hover); }
-        .new-chat-btn { margin-top: 20px; background-color: #1A1A1C; border: 1px solid #333; color: #757575; padding: 12px 15px; border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 14px; transition: 0.2s; }
-        .new-chat-btn:hover { background-color: var(--bg-hover); color: var(--text-main); }
+        
+        .new-chat-btn { margin-top: 10px; background-color: #1A1A1C; border: 1px solid #333; color: #E3E3E3; padding: 12px 15px; border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 14px; transition: 0.2s; }
+        .new-chat-btn:hover { background-color: var(--bg-hover); }
         .recent-section { margin-top: 20px; flex-grow: 1; overflow-y: auto; }
-        .section-title { font-size: 12px; font-weight: 600; padding: 10px; color: var(--text-main); }
-        .chat-history-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 20px; cursor: pointer; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .section-title { font-size: 12px; font-weight: 600; padding: 10px; color: var(--text-secondary); }
+        
+        .chat-history-item { display: flex; align-items: center; gap: 10px; padding: 12px 10px; border-radius: 10px; cursor: pointer; font-size: 14px; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px; }
         .chat-history-item:hover { background-color: var(--bg-hover); }
+        .chat-history-item.active { background-color: #282932; font-weight: bold; }
 
         /* --- MAIN CONTENT --- */
-        .main-content { flex: 1; display: flex; flex-direction: column; position: relative; height: 100%; }
+        .main-content { flex: 1; display: flex; flex-direction: column; position: relative; height: 100%; min-width: 0; }
+        
         .top-bar { padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; height: var(--header-height); position: absolute; top: 0; left: 0; right: 0; z-index: 10; }
-        .mobile-menu-trigger { display: none; margin-right: 10px; }
-        @media (max-width: 768px) { .mobile-menu-trigger { display: block; } }
+        .menu-btn { background: none; border: none; cursor: pointer; padding: 10px; border-radius: 50%; color: var(--text-main); width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; transition: 0.2s; margin-right: 10px; }
+        .menu-btn:hover { background-color: rgba(255, 255, 255, 0.1); }
         .brand-name { font-size: 20px; color: var(--text-secondary); font-weight: 500; display: flex; align-items: center;}
         .brand-name span { color: var(--text-main); }
         .profile-section { display: flex; align-items: center; gap: 15px; }
-        .pro-badge { background-color: #1F1F1F; border: 1px solid #333; font-size: 11px; padding: 6px 12px; border-radius: 8px; font-weight: bold; display: none; }
-        @media(min-width: 400px) { .pro-badge { display: block; } }
         .avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(45deg, #4285f4, #9b72cb); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
-        .chat-scroll-area { flex: 1; overflow-y: auto; padding-top: var(--header-height); padding-bottom: 120px; display: flex; flex-direction: column; align-items: center; }
-        .welcome-screen { display: flex; flex-direction: column; justify-content: center; height: 100%; width: 100%; max-width: 800px; padding: 0 20px; transition: opacity 0.3s ease; }
+        
+        .chat-scroll-area { flex: 1; overflow-y: auto; padding-top: var(--header-height); padding-bottom: 140px; display: flex; flex-direction: column; align-items: center; }
+        
+        /* --- WELCOME SCREEN --- */
+        .welcome-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%; max-width: 800px; padding: 0 20px; transition: opacity 0.3s ease; text-align: center; }
         .welcome-screen.hidden { display: none; }
-        .greeting-text { font-size: clamp(32px, 5vw, 56px); font-weight: 500; margin-bottom: 10px; background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.2; }
-        .sub-greeting { font-size: clamp(32px, 5vw, 56px); font-weight: 500; color: #444746; line-height: 1.2; }
+        .welcome-text-container { width: 100%; text-align: left; margin-bottom: 40px; padding-left: 10px; }
+        .greeting-small { font-size: clamp(20px, 3vw, 24px); color: var(--text-main); margin-bottom: 8px; font-weight: 400; }
+        .greeting-large { font-size: clamp(28px, 4vw, 40px); color: var(--text-main); font-weight: 400; line-height: 1.2; }
+        
+        .pills-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; max-width: 700px; margin-top: 20px; }
+        .pill-btn { background-color: #1A1A1C; border: 1px solid #333; color: var(--text-main); padding: 12px 20px; border-radius: 30px; font-size: 14px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
+        .pill-btn:hover { background-color: var(--bg-hover); }
+
+        /* --- CHAT MESSAGES --- */
         .messages-container { width: 100%; max-width: 800px; padding: 20px; display: none; flex-direction: column; gap: 20px; }
         .messages-container.active { display: flex; }
         .message { display: flex; gap: 15px; line-height: 1.6; font-size: 16px; animation: fadeIn 0.3s ease; }
         .message.user { justify-content: flex-end; }
-        .message-content { padding: 0 10px; max-width: 80%; }
+        .message-content { padding: 0 10px; max-width: 80%; display: flex; flex-direction: column; gap: 10px;}
         .user .message-content { background-color: var(--bg-message-user); padding: 10px 15px; border-radius: 15px 3px 15px 15px; }
         .ai .message-content { padding-top: 5px; }
         .message-avatar { width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
         .icon-ai { background: var(--text-main); color: var(--bg-body); font-weight: bold; font-size: 12px;}
-        .input-wrapper-container { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, var(--bg-body) 80%, transparent); padding: 20px; display: flex; justify-content: center; z-index: 20; }
-        .input-box { width: 100%; max-width: 800px; background-color: var(--bg-input); border-radius: 30px; padding: 12px 15px; display: flex; align-items: flex-end; gap: 10px; transition: 0.2s; border: 1px solid transparent; }
-        .input-box:focus-within { background-color: #282932; border-color: #444; }
-        .input-icon { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0.7; border-radius: 50%; transition: 0.2s; }
-        .input-icon:hover { background: rgba(255,255,255,0.1); opacity: 1; }
-        textarea { flex: 1; background: transparent; border: none; color: var(--text-main); font-size: 16px; resize: none; outline: none; max-height: 150px; padding: 5px 0; line-height: 24px; }
+        .chat-image { max-width: 100%; max-height: 300px; border-radius: 10px; object-fit: contain; }
+
+        /* --- TYPING ANIMATION (THINKING MODERN) --- */
+        .ai-spinner {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, #4285f4, #9b72cb, #ea4335, #fbbc04, #4285f4);
+            animation: spin 1.2s linear infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 10px rgba(155, 114, 203, 0.4);
+        }
+
+        .ai-spinner-inner {
+            width: 22px;
+            height: 22px;
+            background-color: var(--bg-body);
+            border-radius: 50%;
+        }
+
+        .ai-thinking-text {
+            background: linear-gradient(90deg, #4285f4, #9b72cb, #e3e3e3);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 500;
+            animation: pulseText 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pulseText {
+            0% { background-position: 0% 50%; opacity: 0.8;}
+            50% { background-position: 100% 50%; opacity: 1;}
+            100% { background-position: 0% 50%; opacity: 0.8;}
+        }
+
+        /* --- INPUT AREA --- */
+        .input-wrapper-container { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, var(--bg-body) 80%, transparent); padding: 20px; display: flex; flex-direction: column; align-items: center; z-index: 20; }
+        .input-box { position: relative; width: 100%; max-width: 800px; background-color: var(--bg-input); border-radius: 30px; padding: 10px 15px; display: flex; flex-direction: column; gap: 10px; transition: 0.2s; border: 1px solid #444; }
+        .input-box:focus-within { background-color: #282932; border-color: #666; }
+        
+        .input-top-row { display: flex; width: 100%; }
+        textarea { flex: 1; background: transparent; border: none; color: var(--text-main); font-size: 16px; resize: none; outline: none; max-height: 150px; padding: 10px 5px; line-height: 24px; }
+        textarea::placeholder { color: #757575; }
+
+        .input-bottom-row { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 0 5px 5px 5px; }
+        .tools-left { display: flex; align-items: center; gap: 15px; }
+        .tools-right { display: flex; align-items: center; gap: 15px; position: relative; }
+        
+        .icon-btn { cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; transition: 0.2s; border-radius: 50%; padding: 5px; }
+        .icon-btn:hover { color: var(--text-main); background-color: rgba(255,255,255,0.05); }
+        
+        .text-btn { position: relative; font-size: 13px; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; gap: 5px; padding: 6px 10px; border-radius: 8px; transition: 0.2s; overflow: hidden; }
+        .text-btn:hover { color: var(--text-main); background-color: rgba(255,255,255,0.05); }
+        .mat-mdc-button-touch-target { position: absolute; top: 50%; left: 50%; width: 100%; height: 100%; transform: translate(-50%, -50%); border-radius: inherit; }
+
+        /* --- POPUP MENUS --- */
+        .popup-menu { position: absolute; background-color: var(--bg-sidebar); border: 1px solid #444; border-radius: 16px; padding: 8px; display: none; flex-direction: column; gap: 4px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 100; transform-origin: bottom left; }
+        .popup-menu.active { display: flex; animation: popUp 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .menu-item { padding: 10px 12px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 12px; font-size: 14px; color: var(--text-main); transition: 0.2s background-color; white-space: nowrap; }
+        .menu-item:hover { background-color: var(--bg-hover); }
+        .menu-item svg { fill: var(--text-secondary); }
+
+        #attachmentMenu { bottom: 65px; left: 10px; min-width: 180px; }
+        #proMenu { bottom: 45px; right: 0; min-width: 160px; transform-origin: bottom right; }
+
+        .recording { color: #d96570 !important; animation: pulse 1.5s infinite; }
+        
         svg { fill: currentColor; }
+        @keyframes popUp { from { opacity: 0; transform: scale(0.9) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
-
-        #server-blocker {
-            display: none; 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.85);
-            z-index: 99999;
-            justify-content: center; align-items: center;
-            backdrop-filter: blur(8px);
-        }
-
-        .popup-box {
-            background-color: #1E1F20; border: 1px solid #444; padding: 40px;
-            border-radius: 24px; text-align: center; max-width: 400px; width: 90%;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .popup-icon { width: 60px; height: 60px; margin: 0 auto 20px auto; background: rgba(217, 101, 112, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #d96570; }
-        .popup-title { font-size: 24px; font-weight: 500; margin-bottom: 10px; color: #E3E3E3; }
-        .popup-desc { font-size: 14px; color: #9CA0A6; line-height: 1.5; margin-bottom: 0; }
-        @keyframes popIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
     </style>
+
+    <script>
+      window.MathJax = {
+        tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] }
+      };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
 
-    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+    <div class="overlay" id="overlay" onclick="toggleSidebarMobile()"></div>
+    
     <aside class="sidebar" id="sidebar">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <button class="menu-btn" onclick="toggleSidebar()">
-                <svg viewBox="0 0 24 24" width="24" height="24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"></path></svg>
-            </button>
-        </div>
-        <div class="new-chat-btn" onclick="resetChat()">
+        <div class="new-chat-btn" onclick="startNewChat()">
             <span style="font-size: 20px;">+</span> Percakapan baru
         </div>
+        
         <div class="recent-section">
             <div class="section-title">Terbaru</div>
+            <div id="historyList"></div>
         </div>
-        <div style="margin-top: auto; padding: 10px; font-size: 12px; color: #555;">Zae AI • v2.0 Mobile Ready</div>
+        
+        <div style="margin-top: auto; padding: 10px; font-size: 12px; color: #555;">Zae AI • Pro Edition</div>
     </aside>
 
     <main class="main-content">
         <header class="top-bar">
             <div style="display: flex; align-items: center;">
-                <button class="menu-btn mobile-menu-trigger" onclick="toggleSidebar()">
+                <button class="menu-btn" onclick="toggleSidebarDesktop()">
                     <svg viewBox="0 0 24 24" width="24" height="24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"></path></svg>
                 </button>
                 <div class="brand-name">Zae <span>AI</span></div>
             </div>
             <div class="profile-section">
-                <div class="pro-badge">Coba Zae Advanced</div>
                 <div class="avatar">I</div>
             </div>
         </header>
 
         <div class="chat-scroll-area" id="scrollArea">
             <div class="welcome-screen" id="welcomeScreen">
-                <h1 class="greeting-text">Halo, Selamat Datang</h1>
-                <h2 class="sub-greeting">Apa yang ingin kamu buat hari ini?</h2>
+                <div class="welcome-text-container">
+                    <h1 class="greeting-small">Halo Muhammad Irsya</h1>
+                    <h2 class="greeting-large">Sebaiknya kita mulai dari mana?</h2>
+                </div>
             </div>
+            
             <div class="messages-container" id="messagesContainer"></div>
         </div>
 
         <div class="input-wrapper-container">
             <div class="input-box">
-                <div class="input-icon"><svg viewBox="0 0 24 24" width="24" height="24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path></svg></div>
+                <div class="popup-menu" id="attachmentMenu">
+                    <div class="menu-item" onclick="handleDummyUpload('file')">
+                        <svg viewBox="0 0 24 24" width="20" height="20"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"></path></svg>
+                        Upload File
+                    </div>
+                    <div class="menu-item" onclick="document.getElementById('imageInput').click(); toggleAttachmentMenu(event);">
+                        <svg viewBox="0 0 24 24" width="20" height="20"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"></path></svg>
+                        Upload Foto
+                    </div>
+                    <div class="menu-item" onclick="handleDummyUpload('code')">
+                        <svg viewBox="0 0 24 24" width="20" height="20"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"></path></svg>
+                        Upload Code
+                    </div>
+                </div>
+
+                <div class="input-top-row">
+                    <textarea id="userInput" placeholder="Minta Zae AI" rows="1"></textarea>
+                </div>
                 
-                <div class="input-icon"><svg viewBox="0 0 24 24" width="24" height="24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"></path></svg></div>
+                <div class="input-bottom-row">
+                    <div class="tools-left">
+                        <div class="icon-btn" id="plusBtn" onclick="toggleAttachmentMenu(event)">
+                            <svg viewBox="0 0 24 24" width="24" height="24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path></svg>
+                        </div>
+                        
+                        <div class="text-btn">
+                            <span class="mat-mdc-button-touch-target"></span>
+                            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"></path></svg>
+                            Alat
+                        </div>
+                    </div>
+                    
+                    <div class="tools-right">
+                        <div class="popup-menu" id="proMenu">
+                            <div class="menu-item" onclick="selectProMode('Fast', event)">🚀 Fast</div>
+                            <div class="menu-item" onclick="selectProMode('Deep Thinking', event)">🧠 Deep Thinking</div>
+                        </div>
+                        
+                        <div class="text-btn" id="proBtn" onclick="toggleProMenu(event)">
+                            <span id="proLabel">Pro</span> 
+                            <svg viewBox="0 0 24 24" width="16" height="16"><path d="M7 10l5 5 5-5z"></path></svg>
+                        </div>
+                        
+                        <div class="icon-btn" id="micBtn" onclick="toggleVoice()">
+                            <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"></path><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"></path></svg>
+                        </div>
+                        
+                        <div class="icon-btn" onclick="processMessage()" style="color: #E3E3E3; display: none;" id="sendBtn">
+                            <svg viewBox="0 0 24 24" width="20" height="20"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+                        </div>
+                    </div>
+                </div>
                 
-                <textarea id="userInput" placeholder="Masukkan perintah di sini" rows="1"></textarea>
-                
-                <div class="input-icon"><svg viewBox="0 0 24 24" width="24" height="24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"></path><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"></path></svg></div>
-                
-                <div class="input-icon" onclick="sendMessage()" style="color: #8ab4f8;"><svg viewBox="0 0 24 24" width="24" height="24" style="transform: rotate(0deg); margin-left: 2px;"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg></div>
+                <input type="file" id="imageInput" accept="image/*" style="display: none;">
+            </div>
+
+            <div class="pills-container" id="pillsContainer">
             </div>
         </div>
     </main>
 
-    <div id="server-blocker">
-        <div class="popup-box">
-            <div class="popup-icon">
-                <svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor">
-                    <path d="M11 15h2v2h-2zm0-8h2v6h-2zm.99-5C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"></path>
-                </svg>
-            </div>
-            <h2 class="popup-title">Server Nonaktif</h2>
-            <p class="popup-desc">
-                Mohon maaf, saat ini sistem sedang dalam perbaikan (Maintenance).<br>
-                Silakan kembali lagi nanti.
-            </p>
-        </div>
-    </div>
-
     <script>
-        window.onload = function() {
-            setTimeout(function() {
-                document.getElementById('server-blocker').style.display = 'flex';
-            }, 3000);
-        };
-
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('overlay');
-        function toggleSidebar() { sidebar.classList.toggle('active'); overlay.classList.toggle('active'); }
-        const textarea = document.getElementById('userInput');
-        textarea.addEventListener('input', function() {
-            this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px';
-            if(this.value === '') this.style.height = 'auto';
-        });
-        function sendMessage() {
-            const input = document.getElementById('userInput');
-            const message = input.value.trim();
-            if(message !== "") {
-                document.getElementById('welcomeScreen').classList.add('hidden');
-                const msgContainer = document.getElementById('messagesContainer');
-                msgContainer.classList.add('active');
-                addMessage(message, 'user');
-                input.value = ""; input.style.height = 'auto';
-                setTimeout(() => { addMessage("Ini adalah simulasi respon dari Zae AI.", 'ai'); }, 1000);
+        
+        function toggleSidebarDesktop() {
+            if(window.innerWidth > 768) {
+                sidebar.classList.toggle('collapsed'); 
+            } else {
+                toggleSidebarMobile(); 
             }
         }
-        function addMessage(text, sender) {
-            const container = document.getElementById('messagesContainer');
-            const scrollArea = document.getElementById('scrollArea');
-            const div = document.createElement('div');
-            div.className = `message ${sender}`;
-            let avatarHtml = sender === 'ai' ? `<div class="message-avatar icon-ai"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></div>` : '';
-            div.innerHTML = `${avatarHtml}<div class="message-content">${text}</div>${sender === 'user' ? '<div class="message-avatar" style="background:purple; color:white; font-size:12px;">I</div>' : ''}`;
-            container.appendChild(div);
-            scrollArea.scrollTop = scrollArea.scrollHeight;
+        
+        function toggleSidebarMobile() { 
+            sidebar.classList.toggle('active'); 
+            overlay.classList.toggle('active'); 
         }
-        textarea.addEventListener('keydown', function(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
-        function resetChat() {
+
+        const textarea = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const pillsContainer = document.getElementById('pillsContainer');
+
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px';
+            if(this.value.trim() !== '') {
+                sendBtn.style.display = 'flex';
+            } else {
+                sendBtn.style.display = 'none';
+                this.style.height = 'auto';
+            }
+        });
+        
+        textarea.addEventListener('keydown', function(e) { 
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); processMessage(); } 
+        });
+
+        function toggleAttachmentMenu(e) {
+            if(e) e.stopPropagation();
+            document.getElementById('proMenu').classList.remove('active');
+            document.getElementById('attachmentMenu').classList.toggle('active');
+        }
+        
+        function toggleProMenu(e) {
+            if(e) e.stopPropagation();
+            document.getElementById('attachmentMenu').classList.remove('active');
+            document.getElementById('proMenu').classList.toggle('active');
+        }
+        
+        function selectProMode(mode, e) {
+            if(e) e.stopPropagation();
+            document.getElementById('proLabel').innerText = mode;
+            document.getElementById('proMenu').classList.remove('active');
+        }
+
+        window.addEventListener('click', function(e) {
+            const attachMenu = document.getElementById('attachmentMenu');
+            const proMenu = document.getElementById('proMenu');
+            const plusBtn = document.getElementById('plusBtn');
+            const proBtn = document.getElementById('proBtn');
+            
+            if (attachMenu.classList.contains('active') && !attachMenu.contains(e.target) && !plusBtn.contains(e.target)) {
+                attachMenu.classList.remove('active');
+            }
+            if (proMenu.classList.contains('active') && !proMenu.contains(e.target) && !proBtn.contains(e.target)) {
+                proMenu.classList.remove('active');
+            }
+        });
+
+        function handleDummyUpload(type) {
+            document.getElementById('attachmentMenu').classList.remove('active');
+            let label = type === 'file' ? 'dokumen' : 'kode program';
+            processMessage(`[Mengunggah ${label}...]`);
+        }
+
+        let chatSessions = [];
+        let currentSessionId = null;
+
+        function generateId() { return Math.random().toString(36).substr(2, 9); }
+
+        function startNewChat() {
+            currentSessionId = null;
             document.getElementById('messagesContainer').innerHTML = '';
             document.getElementById('messagesContainer').classList.remove('active');
             document.getElementById('welcomeScreen').classList.remove('hidden');
-            if(window.innerWidth <= 768) toggleSidebar();
+            pillsContainer.style.display = 'flex';
+            renderSidebar();
+            if(window.innerWidth <= 768) toggleSidebarMobile();
+        }
+
+        function loadChatSession(id) {
+            currentSessionId = id;
+            const session = chatSessions.find(s => s.id === id);
+            
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            pillsContainer.style.display = 'none';
+            const msgContainer = document.getElementById('messagesContainer');
+            msgContainer.innerHTML = '';
+            msgContainer.classList.add('active');
+
+            session.messages.forEach(msg => {
+                appendMessageToDOM(msg.content, msg.sender, null, false, false); 
+            });
+
+            renderSidebar();
+            if(window.innerWidth <= 768) toggleSidebarMobile();
+        }
+
+        function renderSidebar() {
+            const list = document.getElementById('historyList');
+            list.innerHTML = '';
+            for(let i = chatSessions.length - 1; i >= 0; i--) {
+                const session = chatSessions[i];
+                const div = document.createElement('div');
+                div.className = `chat-history-item ${session.id === currentSessionId ? 'active' : ''}`;
+                div.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" style="flex-shrink:0"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"></path></svg> ${session.title}`;
+                div.title = session.title; 
+                div.onclick = () => loadChatSession(session.id);
+                list.appendChild(div);
+            }
+        }
+
+        function sendPillMessage(text) {
+            document.getElementById('userInput').value = text;
+            processMessage();
+        }
+
+        function processMessage(customText = null, imageHtml = "") {
+            const input = document.getElementById('userInput');
+            const messageText = customText !== null ? customText : input.value.trim();
+            
+            if(messageText === "" && imageHtml === "") return;
+
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            pillsContainer.style.display = 'none';
+            document.getElementById('messagesContainer').classList.add('active');
+            
+            const finalContent = imageHtml + (messageText ? `<span>${messageText}</span>` : '');
+            
+            if (!currentSessionId) {
+                currentSessionId = generateId();
+                let title = messageText ? messageText : "Gambar Baru"; 
+                chatSessions.push({ id: currentSessionId, title: title, messages: [] });
+            }
+
+            appendMessageToDOM(finalContent, 'user', null, false, false);
+            saveMessageToSession(currentSessionId, finalContent, 'user');
+            
+            input.value = ""; input.style.height = 'auto'; sendBtn.style.display = 'none';
+            renderSidebar(); 
+            
+            const thinkingId = 'thinking-' + Date.now();
+            const thinkingHtml = `<span class="ai-thinking-text" style="display:inline-block; margin-top:4px;">Zae sedang memikirkan...</span>`;
+            
+            appendMessageToDOM(thinkingHtml, 'ai', thinkingId, false, true);
+            
+            const isDeepThinking = document.getElementById('proLabel').innerText === 'Deep Thinking';
+            const typingDelay = isDeepThinking ? 3500 : (1000 + Math.random() * 1000); 
+
+            setTimeout(() => { 
+                const thinkingElement = document.getElementById(thinkingId);
+                if (thinkingElement) thinkingElement.remove();
+
+                const botReply = getBotResponse(messageText);
+                appendMessageToDOM(botReply, 'ai', null, true, false); 
+                saveMessageToSession(currentSessionId, botReply, 'ai');
+            }, typingDelay);
+        }
+
+        function saveMessageToSession(id, content, sender) {
+            const session = chatSessions.find(s => s.id === id);
+            if(session) { session.messages.push({ content: content, sender: sender }); }
+        }
+
+        function typeMessageHTML(container, htmlContent, speed = 15) {
+            const regex = /(<[^>]+>|\$\$[\s\S]*?\$\$|\$[\s\S]*?\$)/g;
+            const parts = htmlContent.split(regex);
+            
+            container.innerHTML = "";
+            let currentPartIndex = 0;
+            let charIndex = 0;
+            const scrollArea = document.getElementById('scrollArea');
+            
+            function type() {
+                if (currentPartIndex >= parts.length) {
+                    if (window.MathJax && (htmlContent.includes('$') || htmlContent.includes('\\('))) {
+                        MathJax.typesetPromise([container]).catch((err) => console.log(err));
+                    }
+                    scrollArea.scrollTop = scrollArea.scrollHeight;
+                    return;
+                }
+
+                const part = parts[currentPartIndex];
+                
+                if (part.startsWith('<') || part.startsWith('$')) {
+                    container.innerHTML += part;
+                    currentPartIndex++;
+                    setTimeout(type, 0); 
+                } else {
+                    if (charIndex < part.length) {
+                        container.innerHTML += part.charAt(charIndex);
+                        charIndex++;
+                        scrollArea.scrollTop = scrollArea.scrollHeight; 
+                        setTimeout(type, speed);
+                    } else {
+                        charIndex = 0;
+                        currentPartIndex++;
+                        setTimeout(type, 0);
+                    }
+                }
+            }
+            type();
+        }
+
+        function appendMessageToDOM(content, sender, elementId = null, animateTyping = false, isThinking = false) {
+            const container = document.getElementById('messagesContainer');
+            const scrollArea = document.getElementById('scrollArea');
+            const div = document.createElement('div');
+            
+            div.className = `message ${sender}`;
+            if (elementId) div.id = elementId;
+            
+            let avatarHtml = '';
+            if (sender === 'ai') {
+                if (isThinking) {
+                    avatarHtml = `
+                    <div class="message-avatar">
+                        <div class="ai-spinner">
+                            <div class="ai-spinner-inner"></div>
+                        </div>
+                    </div>`;
+                } else {
+                    avatarHtml = `<div class="message-avatar icon-ai"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></div>`;
+                }
+            }
+            
+            const contentContainer = document.createElement('div');
+            contentContainer.className = 'message-content';
+
+            div.innerHTML = avatarHtml;
+            div.appendChild(contentContainer);
+
+            if (sender === 'user') {
+                div.insertAdjacentHTML('beforeend', '<div class="message-avatar" style="background:purple; color:white; font-size:12px;">I</div>');
+            }
+            
+            container.appendChild(div);
+            
+            if (animateTyping && sender === 'ai') {
+                typeMessageHTML(contentContainer, content, 15); 
+            } else {
+                contentContainer.innerHTML = content;
+                if (window.MathJax && (content.includes('$') || content.includes('\\('))) {
+                    MathJax.typesetPromise([div]).catch(function (err) { console.log(err.message); });
+                }
+            }
+
+            setTimeout(() => { scrollArea.scrollTop = scrollArea.scrollHeight; }, 50);
+        }
+
+        function getBotResponse(userMessage) {
+            if (!userMessage || userMessage.trim() === "") return "Gambar yang menarik! Sayangnya aku belum tersambung ke backend API.";
+            let msg = userMessage.toLowerCase();
+
+            if (msg.includes('[mengunggah')) return "File berhasil masuk ke memori Frontend sementara.";
+            else if (msg.includes('bantu belajar')) return "Tentu, mau belajar apa hari ini?";
+            else if (msg.includes('buat musik')) return "Oke, genre musik apa yang sedang kamu bayangkan?";
+            else if (msg.includes('hai') || msg.includes('halo')) return "Halo! Ada yang bisa Zae bantu hari ini?";
+            else if (msg.includes('siapa namamu')) return "Aku Zae AI, dikembangkan oleh Zaelabs!";
+            else if (msg.includes('1 + 1 =')) return String.raw`Mari kita buktikan persamaan sederhana ini menggunakan konsep <strong>Teorema Dasar Kalkulus</strong> dan <strong>Turunan Fungsi Multivariabel</strong>.<br><br>
+            
+            <strong>1. Pendekatan Fungsi Konstan</strong><br>
+            Misalkan kita memiliki fungsi <i>f(x, y)</i> yang didefinisikan sebagai:<br>
+            $$f(x, y) = x + y$$<br>
+            Kita ingin membuktikan hasil dari <i>f(1, 1)</i>. Dalam Kalkulus Multivariabel, kita tahu bahwa gradien (&nabla;) dari fungsi skalar memberikan informasi mengenai arah perubahan fungsi tersebut.<br><br>
+            
+            Langkah-langkah:<br>
+            <strong>a. Cari Gradien:</strong><br>
+            $$\nabla f = \left( \frac{\partial f}{\partial x}, \frac{\partial f}{\partial y} \right) = (1, 1)$$<br>
+            
+            <strong>b. Gunakan Integral Garis:</strong><br>
+            Berdasarkan Teorema Dasar Integral Garis, jika <b>F</b> = &nabla;<i>f</i>, maka:<br>
+            $$\int_C \nabla f \cdot d\mathbf{r} = f(\mathbf{r}(b)) - f(\mathbf{r}(a))$$<br>
+            Jika kita bergerak dari titik asal (0, 0) ke titik (1, 1) melalui lintasan lurus:<br>
+            $$\int_0^1 (1, 1) \cdot (1, 1) \, dt = \int_0^1 2 \, dt = [2t]_0^1 = 2$$<br>
+            Karena <i>f(0, 0)</i> = 0, maka terbukti secara kalkulus bahwa <i>f(1, 1)</i> = 2.<br><br>
+            
+            <strong>2. Menggunakan Notasi Sigma (&Sigma;) dan Deret</strong><br>
+            Jika kita melihat angka 1 sebagai sebuah deret konstan:<br>
+            Misalkan kita punya fungsi <i>f(x) = x</i>. Menurut definisi deret Taylor di sekitar <i>a</i> = 0:<br>
+            $$x = \sum_{n=1}^{\infty} a_n$$<br>
+            Namun, lebih sederhana jika kita menggunakan Sifat Linearitas Operator Sigma:<br>
+            $$\sum_{i=1}^{n} (a_i + b_i) = \sum_{i=1}^{n} a_i + \sum_{i=1}^{n} b_i$$<br>
+            Jika <i>n</i> = 1, <i>a<sub>1</sub></i> = 1, dan <i>b<sub>1</sub></i> = 1:<br>
+            $$\sum_{i=1}^{1} (1 + 1) = \sum_{i=1}^{1} 1 + \sum_{i=1}^{1} 1 = 1 + 1$$<br>
+            Hasil penjumlahannya merepresentasikan luas di bawah kurva diskrit yang totalnya adalah 2.<br><br>
+            
+            <strong>3. Pendekatan Luas (Integral Lipat)</strong><br>
+            Dalam Kalkulus Lanjut, angka 2 bisa direpresentasikan sebagai volume atau luas daerah <i>R</i>.<br>
+            Misalkan <i>R</i> adalah persegi panjang dengan domain [0, 2] &times; [0, 1].<br>
+            $$\text{Luas} = \iint_R dA = \int_0^1 \int_0^2 dx \, dy$$<br>
+            $$\int_0^1 [x]_0^2 \, dy = \int_0^1 2 \, dy = 2$$<br>
+            Secara geometris, jika kamu menggabungkan dua kotak satuan (masing-masing luasnya 1), maka:<br>
+            $$\int_0^1 1 \, dx + \int_1^2 1 \, dx = \int_0^2 1 \, dx = 2$$<br><br>
+            
+            <strong>Kesimpulan:</strong><br>
+            Meskipun kita memakai simbol yang tampak kompleks seperti Teorema Divergensi atau Teorema Stokes, pada akhirnya mereka semua tunduk pada hukum dasar aritmatika. 1 + 1 akan tetap bernilai 2, hanya saja kita membuktikannya dengan cara mengamati bagaimana unit-unit kecil (infinitesimal) bergabung menjadi satu kesatuan yang utuh.`;
+            
+            else return "Pesanmu sudah kucatat dalam *history*.";
+        }
+
+        const imageInput = document.getElementById('imageInput');
+        imageInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imgHtml = `<img src="${e.target.result}" class="chat-image">`;
+                    processMessage("", imgHtml); 
+                }
+                reader.readAsDataURL(file);
+            }
+            this.value = ''; 
+        });
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition; let isRecording = false;
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.lang = 'id-ID'; recognition.continuous = false; recognition.interimResults = false;
+            recognition.onstart = function() {
+                isRecording = true; document.getElementById('micBtn').classList.add('recording');
+                document.getElementById('userInput').placeholder = "Mendengarkan...";
+            };
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('userInput').value += " " + transcript;
+                document.getElementById('userInput').dispatchEvent(new Event('input')); 
+            };
+            recognition.onerror = function() { stopRecording(); };
+            recognition.onend = function() { stopRecording(); };
+        }
+
+        function toggleVoice() {
+            if (!recognition) return alert("Browsermu tidak mendukung fitur suara.");
+            isRecording ? recognition.stop() : recognition.start();
+        }
+
+        function stopRecording() {
+            isRecording = false; document.getElementById('micBtn').classList.remove('recording');
+            document.getElementById('userInput').placeholder = "Minta Zae AI";
         }
     </script>
 </body>
