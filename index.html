@@ -413,7 +413,8 @@
             processMessage();
         }
 
-        function processMessage(customText = null, imageHtml = "") {
+        /* --- FUNGSI UTAMA API n8n --- */
+        async function processMessage(customText = null, imageHtml = "") {
             const input = document.getElementById('userInput');
             const messageText = customText !== null ? customText : input.value.trim();
             
@@ -427,7 +428,7 @@
             
             if (!currentSessionId) {
                 currentSessionId = generateId();
-                let title = messageText ? messageText : "Gambar Baru"; 
+                let title = messageText ? messageText : "Percakapan Baru"; 
                 chatSessions.push({ id: currentSessionId, title: title, messages: [] });
             }
 
@@ -442,17 +443,43 @@
             
             appendMessageToDOM(thinkingHtml, 'ai', thinkingId, false, true);
             
-            const isDeepThinking = document.getElementById('proLabel').innerText === 'Deep Thinking';
-            const typingDelay = isDeepThinking ? 3500 : (1000 + Math.random() * 1000); 
+            // --- WEBHOOK URL n8n ---
+            const WEBHOOK_URL = 'https://baqirjufri.app.n8n.cloud/webhook-test/zae-ai-endpoint';
 
-            setTimeout(() => { 
+            try {
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        sessionId: currentSessionId,
+                        chatInput: messageText
+                    })
+                });
+
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                const data = await response.json();
+                
                 const thinkingElement = document.getElementById(thinkingId);
                 if (thinkingElement) thinkingElement.remove();
 
-                const botReply = getBotResponse(messageText);
+                // Pastikan n8n me-return JSON dengan key "output" atau sesuaikan variabel ini
+                const botReply = data.output || data.response || "Maaf, sistem tidak merespon dengan format yang benar.";
+                
                 appendMessageToDOM(botReply, 'ai', null, true, false); 
                 saveMessageToSession(currentSessionId, botReply, 'ai');
-            }, typingDelay);
+
+            } catch (error) {
+                console.error("Fetch error:", error);
+                const thinkingElement = document.getElementById(thinkingId);
+                if (thinkingElement) thinkingElement.remove();
+                
+                const errorMsg = `<span style="color:#d96570;">Gagal terhubung ke server n8n. Pastikan webhook n8n sedang mendengarkan (Listen for Test Event).</span>`;
+                appendMessageToDOM(errorMsg, 'ai', null, false, false);
+                saveMessageToSession(currentSessionId, "Error connection", 'ai');
+            }
         }
 
         function saveMessageToSession(id, content, sender) {
@@ -544,57 +571,6 @@
             }
 
             setTimeout(() => { scrollArea.scrollTop = scrollArea.scrollHeight; }, 50);
-        }
-
-        function getBotResponse(userMessage) {
-            if (!userMessage || userMessage.trim() === "") return "Gambar yang menarik! Sayangnya aku belum tersambung ke backend API.";
-            let msg = userMessage.toLowerCase();
-
-            if (msg.includes('[mengunggah')) return "File berhasil masuk ke memori Frontend sementara.";
-            else if (msg.includes('bantu belajar')) return "Tentu, mau belajar apa hari ini?";
-            else if (msg.includes('buat musik')) return "Oke, genre musik apa yang sedang kamu bayangkan?";
-            else if (msg.includes('hai') || msg.includes('halo')) return "Halo! Ada yang bisa Zae bantu hari ini?";
-            else if (msg.includes('siapa namamu')) return "Aku Zae AI, dikembangkan oleh Zaelabs!";
-            else if (msg.includes('1 + 1 =')) return String.raw`Mari kita buktikan persamaan sederhana ini menggunakan konsep <strong>Teorema Dasar Kalkulus</strong> dan <strong>Turunan Fungsi Multivariabel</strong>.<br><br>
-            
-            <strong>1. Pendekatan Fungsi Konstan</strong><br>
-            Misalkan kita memiliki fungsi <i>f(x, y)</i> yang didefinisikan sebagai:<br>
-            $$f(x, y) = x + y$$<br>
-            Kita ingin membuktikan hasil dari <i>f(1, 1)</i>. Dalam Kalkulus Multivariabel, kita tahu bahwa gradien (&nabla;) dari fungsi skalar memberikan informasi mengenai arah perubahan fungsi tersebut.<br><br>
-            
-            Langkah-langkah:<br>
-            <strong>a. Cari Gradien:</strong><br>
-            $$\nabla f = \left( \frac{\partial f}{\partial x}, \frac{\partial f}{\partial y} \right) = (1, 1)$$<br>
-            
-            <strong>b. Gunakan Integral Garis:</strong><br>
-            Berdasarkan Teorema Dasar Integral Garis, jika <b>F</b> = &nabla;<i>f</i>, maka:<br>
-            $$\int_C \nabla f \cdot d\mathbf{r} = f(\mathbf{r}(b)) - f(\mathbf{r}(a))$$<br>
-            Jika kita bergerak dari titik asal (0, 0) ke titik (1, 1) melalui lintasan lurus:<br>
-            $$\int_0^1 (1, 1) \cdot (1, 1) \, dt = \int_0^1 2 \, dt = [2t]_0^1 = 2$$<br>
-            Karena <i>f(0, 0)</i> = 0, maka terbukti secara kalkulus bahwa <i>f(1, 1)</i> = 2.<br><br>
-            
-            <strong>2. Menggunakan Notasi Sigma (&Sigma;) dan Deret</strong><br>
-            Jika kita melihat angka 1 sebagai sebuah deret konstan:<br>
-            Misalkan kita punya fungsi <i>f(x) = x</i>. Menurut definisi deret Taylor di sekitar <i>a</i> = 0:<br>
-            $$x = \sum_{n=1}^{\infty} a_n$$<br>
-            Namun, lebih sederhana jika kita menggunakan Sifat Linearitas Operator Sigma:<br>
-            $$\sum_{i=1}^{n} (a_i + b_i) = \sum_{i=1}^{n} a_i + \sum_{i=1}^{n} b_i$$<br>
-            Jika <i>n</i> = 1, <i>a<sub>1</sub></i> = 1, dan <i>b<sub>1</sub></i> = 1:<br>
-            $$\sum_{i=1}^{1} (1 + 1) = \sum_{i=1}^{1} 1 + \sum_{i=1}^{1} 1 = 1 + 1$$<br>
-            Hasil penjumlahannya merepresentasikan luas di bawah kurva diskrit yang totalnya adalah 2.<br><br>
-            
-            <strong>3. Pendekatan Luas (Integral Lipat)</strong><br>
-            Dalam Kalkulus Lanjut, angka 2 bisa direpresentasikan sebagai volume atau luas daerah <i>R</i>.<br>
-            Misalkan <i>R</i> adalah persegi panjang dengan domain [0, 2] &times; [0, 1].<br>
-            $$\text{Luas} = \iint_R dA = \int_0^1 \int_0^2 dx \, dy$$<br>
-            $$\int_0^1 [x]_0^2 \, dy = \int_0^1 2 \, dy = 2$$<br>
-            Secara geometris, jika kamu menggabungkan dua kotak satuan (masing-masing luasnya 1), maka:<br>
-            $$\int_0^1 1 \, dx + \int_1^2 1 \, dx = \int_0^2 1 \, dx = 2$$<br><br>
-            
-            <strong>Kesimpulan:</strong><br>
-            Meskipun kita memakai simbol yang tampak kompleks seperti Teorema Divergensi atau Teorema Stokes, pada akhirnya mereka semua tunduk pada hukum dasar aritmatika. 1 + 1 akan tetap bernilai 2, hanya saja kita membuktikannya dengan cara mengamati bagaimana unit-unit kecil (infinitesimal) bergabung menjadi satu kesatuan yang utuh.`;
-            
-            else return "Pesanmu sudah kucatat dalam *history*.";
         }
 
         const imageInput = document.getElementById('imageInput');
