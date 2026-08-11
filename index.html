@@ -454,7 +454,7 @@
                     },
                     body: JSON.stringify({
                         sessionId: currentSessionId,
-                        chatInput: messageText
+                        question: messageText
                     })
                 });
 
@@ -465,8 +465,8 @@
                 const thinkingElement = document.getElementById(thinkingId);
                 if (thinkingElement) thinkingElement.remove();
 
-                // Pastikan n8n me-return JSON dengan key "output" atau sesuaikan variabel ini
-                const botReply = data.output || data.response || "Maaf, sistem tidak merespon dengan format yang benar.";
+                // n8n (node "Respond to Webhook") mengembalikan JSON dengan key "answer"
+                const botReply = data.answer || data.output || data.response || "Maaf, sistem tidak merespon dengan format yang benar.";
                 
                 appendMessageToDOM(botReply, 'ai', null, true, false); 
                 saveMessageToSession(currentSessionId, botReply, 'ai');
